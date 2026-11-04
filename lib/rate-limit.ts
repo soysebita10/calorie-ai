@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { sql } from "@/lib/db";
+import { FREE_AI_DAILY, PREMIUM_AI_DAILY } from "@/lib/plans";
 
 /**
  * Fixed-window counters stored in Postgres, so every Vercel instance shares
@@ -11,7 +12,12 @@ export type Rule = { limit: number; windowSeconds: number };
 
 export const LOGIN_EMAIL_IP: Rule = { limit: 5, windowSeconds: 15 * 60 };
 export const LOGIN_IP: Rule = { limit: 30, windowSeconds: 15 * 60 };
-export const AI_DAILY: Rule = { limit: 20, windowSeconds: 24 * 60 * 60 };
+export const SIGNUP_IP: Rule = { limit: 10, windowSeconds: 60 * 60 };
+export const AI_DAILY_FREE: Rule = { limit: FREE_AI_DAILY, windowSeconds: 24 * 60 * 60 };
+export const AI_DAILY_PREMIUM: Rule = { limit: PREMIUM_AI_DAILY, windowSeconds: 24 * 60 * 60 };
+// Backstop for the whole site, since new accounts could otherwise multiply the per-user limit.
+export const AI_GLOBAL: Rule = { limit: 200, windowSeconds: 24 * 60 * 60 };
+export const BILLING_USER: Rule = { limit: 20, windowSeconds: 60 * 60 };
 
 function hash(value: string) {
   return createHash("sha256").update(value).digest("hex");
@@ -20,7 +26,10 @@ function hash(value: string) {
 export const loginEmailIpKey = (email: string, ip: string) =>
   `login:email-ip:${hash(`${email}|${ip}`)}`;
 export const loginIpKey = (ip: string) => `login:ip:${hash(ip)}`;
+export const signupIpKey = (ip: string) => `signup:ip:${hash(ip)}`;
 export const aiUserKey = (userId: string) => `ai:user:${userId}`;
+export const AI_GLOBAL_KEY = "ai:global";
+export const billingUserKey = (userId: string) => `billing:user:${userId}`;
 
 /** Counts one attempt. Returns how long to wait if the limit is exceeded. */
 export async function consume(key: string, rule: Rule) {

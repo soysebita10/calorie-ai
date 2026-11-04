@@ -6,6 +6,7 @@
     "next": "^16.4.5",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "stripe": "^23.1.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -26,6 +27,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs",
+    "db:seed-demo": "node --env-file-if-exists=.env.local scripts/seed-demo.mjs",
+    "verify:billing": "node --env-file-if-exists=.env.local scripts/verify-billing.mjs",
     "verify:auth": "node --env-file-if-exists=.env.local scripts/verify-auth.mjs",
     "verify:meals": "node --env-file-if-exists=.env.local scripts/verify-meals.mjs"
   },

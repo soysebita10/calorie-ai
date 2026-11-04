@@ -128,3 +128,45 @@
   .tracker-date { width: 100%; }
   .meal-head { flex-wrap: wrap; }
 }
+
+/* ===== Plans and pricing ===== */
+.plan-card { margin-top: 24px; }
+.plan-card:hover { transform: none; }
+.plan-card h2 { font-size: 1.25rem; }
+.plan-card p { margin: 6px 0 0; }
+.plan-card-body { display: flex; align-items: center; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; }
+.plan-card-body button { cursor: pointer; font: inherit; font-weight: 600; }
+.plan-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--line);
+  white-space: nowrap;
+}
+.plan-badge-premium { color: var(--green-900); background: var(--green-100); }
+.plan-card .plan-test-note { margin-top: 14px; font-size: 0.88rem; }
+.plan-card .plan-notice { margin-top: 14px; padding: 10px 14px; border-radius: 12px; font-size: 0.92rem; }
+.plan-card .form-error { color: #991b1b; background: #fef2f2; }
+.plan-card .form-success { color: var(--green-900); background: var(--green-100); }
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+.price-card { display: flex; flex-direction: column; }
+.price-card:hover { transform: none; }
+.price-card .price { margin: 4px 0 12px; font-size: 2.2rem; font-weight: 800; color: var(--ink); }
+.price-card .price span { font-size: 1rem; font-weight: 500; color: var(--muted); }
+.price-card ul { margin: 0 0 24px; padding-left: 20px; color: var(--muted); flex: 1; }
+.price-card li { margin-top: 6px; }
+.price-card .btn { text-align: center; }
+.price-card-featured { border-color: var(--green-600); }
+@media (max-width: 640px) {
+  .pricing-grid { grid-template-columns: 1fr; }
+}

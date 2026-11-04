@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LogoMark, SiteFooter } from "@/components/SiteChrome";
+import { FREE_AI_DAILY, PREMIUM_AI_DAILY, PREMIUM_PRICE_LABEL } from "@/lib/plans";
 
 export default function HomePage() {
   return (
@@ -15,6 +16,7 @@ export default function HomePage() {
             <ul className="nav-links">
               <li><a href="#features">Features</a></li>
               <li><a href="#how">How it works</a></li>
+              <li><a href="#pricing">Pricing</a></li>
               <li className="nav-login"><Link href="/login">Log in</Link></li>
               <li><Link href="/signup" className="btn btn-small">Sign up</Link></li>
             </ul>
@@ -141,6 +143,38 @@ export default function HomePage() {
                 <p>Save the meal, and your daily totals and goal progress update right away.</p>
               </li>
             </ol>
+          </div>
+        </section>
+
+        {/* Pricing */}
+        <section id="pricing" className="section">
+          <div className="container">
+            <div className="section-head">
+              <h2>Simple pricing</h2>
+              <p>Start for free, and upgrade when you log more meals with AI.</p>
+            </div>
+            <div className="pricing-grid">
+              <div className="feature-card price-card">
+                <h3>Free</h3>
+                <p className="price">$0</p>
+                <ul>
+                  <li>{FREE_AI_DAILY} AI meal analyses a day</li>
+                  <li>Meal history and daily totals</li>
+                  <li>Daily calorie goal</li>
+                </ul>
+                <Link href="/signup" className="btn btn-outline">Sign up free</Link>
+              </div>
+              <div className="feature-card price-card price-card-featured">
+                <h3>Premium</h3>
+                <p className="price">{PREMIUM_PRICE_LABEL}<span> / month</span></p>
+                <ul>
+                  <li>{PREMIUM_AI_DAILY} AI meal analyses a day</li>
+                  <li>Everything in Free</li>
+                  <li>Cancel anytime</li>
+                </ul>
+                <Link href="/signup" className="btn">Get Premium</Link>
+              </div>
+            </div>
           </div>
         </section>
 

@@ -1,14 +1,22 @@
 import type { Metadata } from "next";
 import { GoalForm } from "@/components/GoalForm";
 import { MealTracker } from "@/components/MealTracker";
+import { PlanCard } from "@/components/PlanCard";
 import { AppHeader, SiteFooter } from "@/components/SiteChrome";
+import { getBilling, isStripeTestMode } from "@/lib/billing";
 import { sql } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Dashboard — CalorieAI" };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ billing?: string | string[] }>;
+}) {
   const user = await requireUser();
+  const { billing: notice } = await searchParams;
+  const billing = await getBilling(user.id);
 
   const goals = await sql()`
     SELECT daily_calories FROM nutrition_goals WHERE user_id = ${user.id}
@@ -32,6 +40,12 @@ export default async function DashboardPage() {
         <div className="container">
           <span className="eyebrow">Dashboard</span>
           <h1>Welcome, {user.name}</h1>
+
+          <PlanCard
+            billing={billing}
+            notice={typeof notice === "string" ? notice : undefined}
+            testMode={isStripeTestMode()}
+          />
 
           <MealTracker goal={dailyCalories} />
 

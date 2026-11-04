@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 import { analyzeMeal, AnalysisError } from "@/lib/ai";
 import { jsonError, post } from "@/lib/api";
+import { getBilling } from "@/lib/billing";
 import { detectImageType, type ImageType, MAX_DESCRIPTION_LENGTH } from "@/lib/meals";
-import { AI_DAILY, aiUserKey, consume, refund } from "@/lib/rate-limit";
+import {
+  AI_DAILY_FREE,
+  AI_DAILY_PREMIUM,
+  AI_GLOBAL,
+  AI_GLOBAL_KEY,
+  aiUserKey,
+  consume,
+  refund,
+} from "@/lib/rate-limit";
 import { getCurrentUser } from "@/lib/session";
 
 export const maxDuration = 60;
@@ -43,20 +52,31 @@ export const POST = post(async (request) => {
 
   // Checked last, so rejected uploads don't use up the daily allowance.
   const limitKey = aiUserKey(user.id);
-  const limit = await consume(limitKey, AI_DAILY);
+  const { premium } = await getBilling(user.id);
+  const rule = premium ? AI_DAILY_PREMIUM : AI_DAILY_FREE;
+  const limit = await consume(limitKey, rule);
   if (!limit.allowed) {
-    return jsonError(
-      `You've reached the limit of ${AI_DAILY.limit} meal analyses for today. You can try again later.`,
-      429,
-      { "Retry-After": String(limit.retryAfter) },
-    );
+    const message = premium
+      ? `You've reached the limit of ${rule.limit} meal analyses for today. You can try again later.`
+      : `You've used your ${rule.limit} free meal analyses for today. Upgrade to Premium for ${AI_DAILY_PREMIUM.limit} a day, or try again later.`;
+    return jsonError(message, 429, { "Retry-After": String(limit.retryAfter) });
+  }
+
+  // Only requests within the user's own limit count toward the site-wide cap.
+  const siteLimit = await consume(AI_GLOBAL_KEY, AI_GLOBAL);
+  if (!siteLimit.allowed) {
+    await refund(limitKey);
+    console.error("Site-wide daily AI cap reached");
+    return jsonError("AI analysis has reached its daily capacity. Please try again later.", 503, {
+      "Retry-After": String(siteLimit.retryAfter),
+    });
   }
 
   try {
     const analysis = await analyzeMeal({ image, description });
     return NextResponse.json({ ...analysis, source: image ? "photo" : "text" });
   } catch (error) {
-    await refund(limitKey);
+    await Promise.all([refund(limitKey), refund(AI_GLOBAL_KEY)]);
     if (error instanceof AnalysisError) return jsonError(error.message, error.status);
     throw error;
   }

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { jsonError, post, readBody } from "@/lib/api";
+import { clientIp, jsonError, post, readBody } from "@/lib/api";
 import { sql } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
+import { consume, SIGNUP_IP, signupIpKey } from "@/lib/rate-limit";
 import { createSession } from "@/lib/session";
 import {
   normalizeEmail,
@@ -18,6 +19,17 @@ export const POST = post(async (request) => {
 
   const invalid = validateName(name) ?? validateEmail(email) ?? validatePassword(password);
   if (invalid) return jsonError(invalid, 400);
+
+  // Counted before the slow password hash, so parallel requests can't outrun the limit.
+  const limit = await consume(signupIpKey(clientIp(request)), SIGNUP_IP);
+  if (!limit.allowed) {
+    const minutes = Math.ceil(limit.retryAfter / 60);
+    return jsonError(
+      `Too many new accounts from this network. Please try again in about ${minutes} minute${minutes === 1 ? "" : "s"}.`,
+      429,
+      { "Retry-After": String(limit.retryAfter) },
+    );
+  }
 
   const passwordHash = await hashPassword(password);
   const rows = await sql()`

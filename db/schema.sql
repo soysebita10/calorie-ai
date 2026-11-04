@@ -50,3 +50,16 @@ CREATE TABLE IF NOT EXISTS meals (
 );
 
 CREATE INDEX IF NOT EXISTS meals_user_date_idx ON meals (user_id, eaten_on DESC);
+
+-- One row per user who has started paying or been granted premium. No row means Free.
+-- Card details stay with Stripe and are never stored here.
+CREATE TABLE IF NOT EXISTS subscriptions (
+  user_id                BIGINT      PRIMARY KEY REFERENCES users (id) ON DELETE CASCADE,
+  stripe_customer_id     TEXT        UNIQUE,
+  stripe_subscription_id TEXT        UNIQUE,
+  status                 TEXT,                           -- copied from Stripe
+  period_end             TIMESTAMPTZ,                    -- next renewal, or when it ends
+  cancel_scheduled       BOOLEAN     NOT NULL DEFAULT false,
+  comped                 BOOLEAN     NOT NULL DEFAULT false, -- premium without Stripe (demo account)
+  updated_at             TIMESTAMPTZ NOT NULL DEFAULT now()
+);

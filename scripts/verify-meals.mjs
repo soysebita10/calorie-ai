@@ -58,6 +58,8 @@ function send(path, { cookie, json, form, method } = {}) {
 }
 
 async function signup(email, name) {
+  // Test accounts shouldn't count toward the signup limit between runs.
+  await sql`DELETE FROM rate_limits WHERE key LIKE 'signup:ip:%'`;
   const response = await send("/api/auth/signup", { json: { name, email, password: PASSWORD } });
   const set = response.headers.getSetCookie().find((c) => c.startsWith("calorieai_session="));
   return { status: response.status, cookie: set?.split(";")[0] };

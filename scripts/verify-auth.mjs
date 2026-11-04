@@ -46,6 +46,8 @@ const redirectsTo = (response, path) =>
 
 async function run() {
   console.log(`Testing ${BASE}\n`);
+  // Test accounts shouldn't count toward the signup limit between runs.
+  if (sql) await sql`DELETE FROM rate_limits WHERE key LIKE 'signup:ip:%'`;
 
   console.log("Homepage");
   const home = await send("/");

@@ -2,7 +2,7 @@
 
 AI-powered calorie tracking SaaS by **Sebastian Nieves**. Class project.
 
-**Current stage:** accounts and AI meal tracking. Stripe payments are not built yet.
+**Current stage:** accounts, AI meal tracking and a Premium subscription through Stripe (test mode).
 
 ## Stack
 
@@ -11,7 +11,8 @@ AI-powered calorie tracking SaaS by **Sebastian Nieves**. Class project.
 - bcrypt password hashing (cost 12)
 - Database-backed sessions in an HttpOnly cookie, valid for 30 days
 - Meal analysis with Claude Haiku 5.5 through `@anthropic-ai/sdk` (change it with `AI_MODEL`)
-- Limits shared across Vercel instances, stored in Postgres: 5 failed logins per email and IP and 30 per IP in 15 minutes, and 20 AI analyses per user per day
+- Stripe Checkout and the Stripe customer portal for Premium subscriptions
+- Limits shared across Vercel instances, stored in Postgres: 5 failed logins per email and IP and 30 per IP in 15 minutes, 10 new accounts per IP per hour, AI analyses per user per day (3 on Free, 20 on Premium), and 200 AI analyses per day across the site
 
 ## Project layout
 
@@ -23,12 +24,16 @@ AI-powered calorie tracking SaaS by **Sebastian Nieves**. Class project.
 | `app/api/auth/*`, `app/api/goal` | Server endpoints |
 | `lib/session.ts` | Creates, reads and ends sessions |
 | `lib/password.ts`, `lib/validation.ts` | Password hashing, input rules |
-| `lib/rate-limit.ts` | Login and AI usage limits |
+| `lib/rate-limit.ts` | Login, signup and AI usage limits |
+| `lib/plans.ts`, `lib/billing.ts` | Plan limits and price label, Stripe calls and subscription state |
+| `app/api/billing/*`, `app/api/stripe/webhook`, `components/PlanCard.tsx` | Checkout, portal, return page, Stripe webhook, plan card |
 | `lib/ai.ts` | Calls the AI model (server only) |
 | `lib/meals.ts` | Meal and image validation |
 | `app/api/meals/*`, `components/MealTracker.tsx`, `components/MealLogger.tsx` | Meal tracking |
-| `db/schema.sql` | Tables: `users`, `sessions`, `nutrition_goals`, `rate_limits`, `meals` |
+| `db/schema.sql` | Tables: `users`, `sessions`, `nutrition_goals`, `rate_limits`, `meals`, `subscriptions` |
 | `scripts/migrate.mjs` | Creates the tables |
+| `scripts/seed-demo.mjs` | Creates the demo account with premium access. The password comes from `DEMO_PASSWORD` |
+| `scripts/verify-billing.mjs` | Plan, limit and webhook protection test, for test databases only. Makes no AI or Stripe calls |
 | `scripts/verify-auth.mjs` | End-to-end auth test |
 | `scripts/verify-meals.mjs` | End-to-end meal test. Makes no AI calls unless `MAX_AI_CALLS` is set |
 
@@ -94,5 +99,6 @@ $env:BASE_URL="https://your-app.vercel.app"; npm run verify:auth
 - POST endpoints reject cross-site requests.
 
 - The API key stays on the server. Photos go to the AI and are not stored.
+- Stripe webhooks are accepted only with a valid signature. Card details never reach this app.
 
-**Not built yet:** signup rate limiting, email verification and password reset.
+**Not built yet:** email verification and password reset.
