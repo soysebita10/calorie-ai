@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Secrets: never commit these. Only .env.example is tracked.
+.env
+.env.*
+!.env.example
+
+.vercel/
