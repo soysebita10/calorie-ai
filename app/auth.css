@@ -75,3 +75,8 @@
 .account-details dt { color: var(--muted); font-size: 0.85rem; margin-top: 12px; }
 .account-details dt:first-child { margin-top: 0; }
 .account-details dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+
+/* Homepage call to action */
+.btn-light { background: var(--white); border-color: var(--white); color: var(--green-700); }
+.btn-light:hover { background: var(--green-50); border-color: var(--green-50); color: var(--green-900); }
+.cta-panel .cta-note { margin-top: 20px; font-size: 0.9rem; font-weight: 400; color: #dcfce7; }
