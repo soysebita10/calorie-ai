@@ -36,16 +36,27 @@ export const POST = post(async (request) => {
     const priceId = process.env.STRIPE_PRICE_ID;
     if (!priceId) throw new Error("STRIPE_PRICE_ID is not set");
 
-    const session = await stripe().checkout.sessions.create({
-      mode: "subscription",
-      customer,
-      client_reference_id: String(user.id),
-      integration_identifier: "calorieai-premium-qkvzmtrw",
-      line_items: [{ price: priceId, quantity: 1 }],
-      subscription_data: { metadata: { user_id: String(user.id) } },
-      success_url: `${origin}/api/billing/return?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/dashboard?billing=cancelled`,
-    });
+    // A second tab or a later click resumes the checkout already in progress, so
+    // one customer can't end up paying two open sessions.
+    const open = await stripe().checkout.sessions.list({ customer, status: "open", limit: 1 });
+    if (open.data[0]?.url) return NextResponse.redirect(open.data[0].url, 303);
+
+    // Requests in the same minute share a key, so Stripe answers a double-click
+    // with one session even when both clicks arrive before either is saved.
+    const minute = Math.floor(Date.now() / 60_000);
+    const session = await stripe().checkout.sessions.create(
+      {
+        mode: "subscription",
+        customer,
+        client_reference_id: String(user.id),
+        integration_identifier: "calorieai-premium-qkvzmtrw",
+        line_items: [{ price: priceId, quantity: 1 }],
+        subscription_data: { metadata: { user_id: String(user.id) } },
+        success_url: `${origin}/api/billing/return?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/dashboard?billing=cancelled`,
+      },
+      { idempotencyKey: `checkout-${user.id}-${minute}` },
+    );
     if (!session.url) throw new Error("Stripe returned no checkout URL");
 
     return NextResponse.redirect(session.url, 303);
