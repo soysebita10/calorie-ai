@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 export function GoalForm({ initialGoal }: { initialGoal: number | null }) {
+  const router = useRouter();
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -24,6 +26,7 @@ export function GoalForm({ initialGoal }: { initialGoal: number | null }) {
           ? { ok: true, message: "Goal saved to your account." }
           : { ok: false, message: data?.error ?? "Couldn't save your goal." },
       );
+      if (response.ok) router.refresh(); // Updates the daily totals above.
     } catch {
       setStatus({ ok: false, message: "Couldn't reach the server. Please try again." });
     }

@@ -2,7 +2,7 @@
 
 AI-powered calorie tracking SaaS by **Sebastian Nieves**. Class project.
 
-**Current stage:** user accounts. AI meal analysis and Stripe payments are not built yet.
+**Current stage:** accounts and AI meal tracking. Stripe payments are not built yet.
 
 ## Stack
 
@@ -10,6 +10,8 @@ AI-powered calorie tracking SaaS by **Sebastian Nieves**. Class project.
 - Neon PostgreSQL through `@neondatabase/serverless`
 - bcrypt password hashing (cost 12)
 - Database-backed sessions in an HttpOnly cookie, valid for 30 days
+- Meal analysis with Claude Haiku 5.5 through `@anthropic-ai/sdk` (change it with `AI_MODEL`)
+- Limits shared across Vercel instances, stored in Postgres: 5 failed logins per email and IP and 30 per IP in 15 minutes, and 20 AI analyses per user per day
 
 ## Project layout
 
@@ -21,9 +23,14 @@ AI-powered calorie tracking SaaS by **Sebastian Nieves**. Class project.
 | `app/api/auth/*`, `app/api/goal` | Server endpoints |
 | `lib/session.ts` | Creates, reads and ends sessions |
 | `lib/password.ts`, `lib/validation.ts` | Password hashing, input rules |
-| `db/schema.sql` | Tables: `users`, `sessions`, `nutrition_goals` |
+| `lib/rate-limit.ts` | Login and AI usage limits |
+| `lib/ai.ts` | Calls the AI model (server only) |
+| `lib/meals.ts` | Meal and image validation |
+| `app/api/meals/*`, `components/MealTracker.tsx`, `components/MealLogger.tsx` | Meal tracking |
+| `db/schema.sql` | Tables: `users`, `sessions`, `nutrition_goals`, `rate_limits`, `meals` |
 | `scripts/migrate.mjs` | Creates the tables |
 | `scripts/verify-auth.mjs` | End-to-end auth test |
+| `scripts/verify-meals.mjs` | End-to-end meal test. Makes no AI calls unless `MAX_AI_CALLS` is set |
 
 ## Setup
 
@@ -86,4 +93,6 @@ $env:BASE_URL="https://your-app.vercel.app"; npm run verify:auth
 - Every per-user query takes the user id from the session, never from the request.
 - POST endpoints reject cross-site requests.
 
-**Not built yet:** login rate limiting, email verification and password reset.
+- The API key stays on the server. Photos go to the AI and are not stored.
+
+**Not built yet:** signup rate limiting, email verification and password reset.

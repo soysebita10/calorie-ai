@@ -26,3 +26,27 @@ CREATE TABLE IF NOT EXISTS nutrition_goals (
   daily_calories INTEGER     NOT NULL CHECK (daily_calories BETWEEN 800 AND 10000),
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Shared counters: login limits and the daily AI limit, across all Vercel instances
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key          TEXT        PRIMARY KEY,   -- hashed; no raw emails or IPs
+  count        INTEGER     NOT NULL,
+  window_start TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS meals (
+  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id    BIGINT       NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+  name       TEXT         NOT NULL CHECK (char_length(name) BETWEEN 1 AND 200),
+  source     TEXT         NOT NULL CHECK (source IN ('photo', 'text')),
+  items      JSONB        NOT NULL DEFAULT '[]',  -- foods and estimated portions
+  calories   INTEGER      NOT NULL CHECK (calories BETWEEN 0 AND 20000),
+  protein_g  NUMERIC(6,1) NOT NULL CHECK (protein_g >= 0),
+  carbs_g    NUMERIC(6,1) NOT NULL CHECK (carbs_g >= 0),
+  fat_g      NUMERIC(6,1) NOT NULL CHECK (fat_g >= 0),
+  eaten_on   DATE         NOT NULL,  -- the user's local date, so totals match their day
+  ai_model   TEXT,
+  created_at TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS meals_user_date_idx ON meals (user_id, eaten_on DESC);

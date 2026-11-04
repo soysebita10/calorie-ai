@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./styles.css";
 import "./auth.css";
+import "./meals.css";
 
 const title = "CalorieAI — Track Your Calories Smarter";
 

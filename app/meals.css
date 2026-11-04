@@ -1,0 +1,130 @@
+/* ===== Meal tracker. Builds on the tokens in styles.css. ===== */
+.tracker { display: grid; gap: 24px; margin-top: 32px; }
+.tracker .feature-card:hover { transform: none; }
+.tracker h2 { font-size: 1.25rem; }
+.tracker-error-slot:empty { display: none; }
+.tracker-error-slot { margin-top: 0; }
+
+/* Daily totals */
+.tracker-summary-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.tracker-date { min-width: 170px; }
+.feature-card .estimate-note { font-size: 0.88rem; }
+.totals {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 20px 0 16px;
+}
+.total { display: grid; gap: 2px; }
+.total strong { font-size: 1.5rem; font-weight: 800; color: var(--green-900); line-height: 1.2; }
+.total-calories strong { font-size: 2rem; }
+.total span { color: var(--muted); font-size: 0.88rem; }
+
+/* Form additions */
+.field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  font: inherit;
+  font-weight: 400;
+  color: var(--ink);
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  resize: vertical;
+}
+.field textarea:focus { outline: 3px solid var(--green-100); border-color: var(--green-600); }
+.field input[type="file"] { padding: 10px; background: var(--green-50); }
+.meal-preview {
+  width: 100%;
+  max-width: 320px;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+
+/* Estimate editor */
+.editor-meta { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+.item-row {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.item-row legend { padding: 0 6px; font-size: 0.85rem; font-weight: 600; color: var(--green-700); }
+.item-text { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.item-numbers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.link-button {
+  justify-self: start;
+  padding: 0;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--green-700);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.link-button:hover { text-decoration: underline; }
+.feature-card .editor-total { margin: 0; font-weight: 700; color: var(--green-900); }
+.editor-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.editor-actions .btn { cursor: pointer; font: inherit; font-weight: 600; }
+.editor-actions .btn:disabled { opacity: 0.65; cursor: wait; transform: none; }
+
+/* Meal list */
+.meal-list, .meal-items, .history-list { list-style: none; margin: 0; padding: 0; }
+.meal { padding: 16px 0; border-top: 1px solid var(--line); }
+.meal:first-child { border-top: 0; padding-top: 4px; }
+.meal:last-child { padding-bottom: 0; }
+.meal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.meal-head > div { min-width: 0; }
+.meal-head h3 { font-size: 1.05rem; margin-bottom: 2px; overflow-wrap: anywhere; }
+.meal-head .btn { flex-shrink: 0; cursor: pointer; font: inherit; font-size: 0.9rem; font-weight: 600; }
+.meal details { margin-top: 8px; color: var(--muted); font-size: 0.92rem; }
+.meal summary { cursor: pointer; font-weight: 600; color: var(--green-700); }
+.meal-items { display: grid; gap: 6px; margin-top: 8px; overflow-wrap: anywhere; }
+.meal-items strong { color: var(--ink); }
+
+/* History */
+.history-list { display: grid; gap: 8px; }
+.history-day {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  width: 100%;
+  padding: 12px 14px;
+  font: inherit;
+  color: var(--muted);
+  text-align: left;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+}
+.history-day:hover { border-color: var(--green-500); }
+.history-day.is-selected { background: var(--green-50); border-color: var(--green-600); }
+.history-date { font-weight: 600; color: var(--ink); }
+
+/* Account and goal cards under the tracker */
+.dashboard-grid.dashboard-grid-two { grid-template-columns: repeat(2, 1fr); margin-top: 24px; }
+
+@media (max-width: 900px) {
+  .dashboard-grid.dashboard-grid-two { grid-template-columns: 1fr; max-width: none; }
+}
+@media (max-width: 600px) {
+  .totals { grid-template-columns: repeat(2, 1fr); }
+  .editor-meta, .item-text { grid-template-columns: 1fr; }
+  .item-numbers { grid-template-columns: repeat(2, 1fr); }
+  .tracker-date { width: 100%; }
+  .meal-head { flex-wrap: wrap; }
+}

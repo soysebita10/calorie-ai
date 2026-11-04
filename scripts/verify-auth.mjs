@@ -11,6 +11,7 @@ const BASE = (process.env.BASE_URL ?? "http://localhost:3000").replace(/\/$/, ""
 const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
 
 const stamp = Date.now();
+const startedAt = new Date(stamp - 60_000).toISOString();
 const PASSWORD_A = `Alpha-${stamp}-pass`;
 const PASSWORD_B = `Bravo-${stamp}-pass`;
 const EMAIL_A = `verify-a-${stamp}@example.com`;
@@ -120,6 +121,50 @@ async function run() {
   const cookieA2 = cookiePair(sessionCookie(loginA));
   check("new login gets a new session token", Boolean(cookieA2) && cookieA2 !== cookieA);
 
+  console.log("\nLogin rate limiting");
+  const limited = `verify-limit-${stamp}@example.com`;
+  const signupLimited = await send("/api/auth/signup", { body: { name: "Tester Limit", email: limited, password: PASSWORD_A } });
+  check("rate-limit test account created", signupLimited.status === 201, `status ${signupLimited.status}`);
+  const statuses = [];
+  for (let i = 0; i < 5; i += 1) {
+    statuses.push((await send("/api/auth/login", { body: { email: limited, password: "wrong-password" } })).status);
+  }
+  check("first 5 wrong passwords answer 401", statuses.every((s) => s === 401), statuses.join(","));
+  const blocked = await send("/api/auth/login", { body: { email: limited, password: PASSWORD_A } });
+  check("6th attempt is blocked, even with the correct password", blocked.status === 429, `status ${blocked.status}`);
+  const retryAfter = Number(blocked.headers.get("retry-after"));
+  check("blocked response says when to retry", retryAfter > 0 && retryAfter <= 900, `retry-after ${retryAfter}`);
+  check("blocked login sets no cookie", !sessionCookie(blocked));
+
+  const stillOk = await send("/api/auth/login", { body: { email: EMAIL_A, password: PASSWORD_A } });
+  check("other accounts on the same network can still log in", stillOk.status === 200, `status ${stillOk.status}`);
+
+  const burst = `verify-burst-${stamp}@example.com`;
+  const parallel = await Promise.all(
+    Array.from({ length: 12 }, () => send("/api/auth/login", { body: { email: burst, password: "wrong-password" } })),
+  );
+  const burstStatuses = parallel.map((r) => r.status);
+  check(
+    "12 parallel guesses: only 5 reach the password check",
+    burstStatuses.filter((s) => s === 401).length === 5 && burstStatuses.filter((s) => s === 429).length === 7,
+    burstStatuses.join(","),
+  );
+
+  if (BASE.startsWith("https://")) {
+    const spoofed = await fetch(`${BASE}/api/auth/login`, {
+      method: "POST",
+      redirect: "manual",
+      headers: {
+        Origin: BASE,
+        "Content-Type": "application/json",
+        "X-Forwarded-For": "203.0.113.77",
+        "X-Vercel-Forwarded-For": "203.0.113.77",
+      },
+      body: JSON.stringify({ email: limited, password: "wrong-password" }),
+    });
+    check("faking the IP header doesn't get around the limit", spoofed.status === 429, `status ${spoofed.status}`);
+  }
+
   console.log("\nPer-user data isolation");
   const signupB = await send("/api/auth/signup", { body: { name: "Tester Bravo", email: EMAIL_B, password: PASSWORD_B } });
   check("second account created", signupB.status === 201, `status ${signupB.status}`);
@@ -144,12 +189,15 @@ async function run() {
   check("B's page has no trace of A", !viewB.includes(EMAIL_A) && !viewB.includes("Tester Alpha"));
 
   if (sql) {
-    await sql`DELETE FROM users WHERE email IN (${EMAIL_A}, ${EMAIL_B})`;
+    // Clears the login counters this run created, so re-running doesn't lock out this network.
+    await sql`DELETE FROM rate_limits WHERE key LIKE 'login:%' AND window_start >= ${startedAt}`;
+    await sql`DELETE FROM users WHERE email IN (${EMAIL_A}, ${EMAIL_B}, ${`verify-limit-${stamp}@example.com`})`;
     const left = await sql`SELECT count(*)::int AS n FROM sessions s LEFT JOIN users u ON u.id = s.user_id WHERE u.id IS NULL`;
     check("deleting users removes their sessions", left[0].n === 0);
     console.log("\nTest accounts deleted.");
   } else {
-    console.log(`\nDATABASE_URL not set: database checks skipped, and ${EMAIL_A} / ${EMAIL_B} were left behind.`);
+    console.log(`\nDATABASE_URL not set: database checks skipped, and test accounts were left behind.`);
+    console.log("This run also used up login attempts for your network for 15 minutes.");
   }
 
   console.log(failures ? `\n${failures} check(s) FAILED.` : "\nAll checks passed.");

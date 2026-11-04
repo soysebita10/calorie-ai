@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { GoalForm } from "@/components/GoalForm";
+import { MealTracker } from "@/components/MealTracker";
 import { AppHeader, SiteFooter } from "@/components/SiteChrome";
 import { sql } from "@/lib/db";
 import { requireUser } from "@/lib/session";
@@ -32,7 +33,15 @@ export default async function DashboardPage() {
           <span className="eyebrow">Dashboard</span>
           <h1>Welcome, {user.name}</h1>
 
-          <div className="feature-grid dashboard-grid">
+          <MealTracker goal={dailyCalories} />
+
+          <div className="feature-grid dashboard-grid dashboard-grid-two">
+            <section className="feature-card">
+              <h2>Daily calorie goal</h2>
+              <p>Saved privately to your account.</p>
+              <GoalForm initialGoal={dailyCalories} />
+            </section>
+
             <section className="feature-card">
               <h2>Your account</h2>
               <dl className="account-details">
@@ -43,17 +52,6 @@ export default async function DashboardPage() {
                 <dt>Member since</dt>
                 <dd>{memberSince}</dd>
               </dl>
-            </section>
-
-            <section className="feature-card">
-              <h2>Daily calorie goal</h2>
-              <p>Saved privately to your account.</p>
-              <GoalForm initialGoal={dailyCalories} />
-            </section>
-
-            <section className="feature-card">
-              <h2>Meal logging</h2>
-              <p>Photo and text meal logging is coming soon. Your meals will appear here.</p>
             </section>
           </div>
         </div>
