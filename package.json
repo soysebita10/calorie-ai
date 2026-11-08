@@ -30,7 +30,8 @@
     "db:seed-demo": "node --env-file-if-exists=.env.local scripts/seed-demo.mjs",
     "verify:billing": "node --env-file-if-exists=.env.local scripts/verify-billing.mjs",
     "verify:auth": "node --env-file-if-exists=.env.local scripts/verify-auth.mjs",
-    "verify:meals": "node --env-file-if-exists=.env.local scripts/verify-meals.mjs"
+    "verify:meals": "node --env-file-if-exists=.env.local scripts/verify-meals.mjs",
+    "stress:ai": "node --env-file-if-exists=.env.local scripts/stress-ai.mjs"
   },
   "private": true
 }

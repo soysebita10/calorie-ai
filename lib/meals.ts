@@ -1,4 +1,6 @@
 export const MAX_ITEMS = 30;
+// Longest food name or portion description, in characters.
+export const MAX_ITEM_TEXT = 100;
 export const MAX_ITEM_CALORIES = 20000;
 export const MAX_ITEM_MACRO_GRAMS = 2000;
 export const MAX_DESCRIPTION_LENGTH = 1000;
@@ -46,7 +48,7 @@ export function parseItem(value: unknown): MealItem | null {
   const item = value as Record<string, unknown>;
   const name = typeof item.name === "string" ? item.name.trim() : "";
   const portion = typeof item.portion === "string" ? item.portion.trim() : "";
-  if (name.length < 1 || name.length > 100 || portion.length > 100) return null;
+  if (name.length < 1 || name.length > MAX_ITEM_TEXT || portion.length > MAX_ITEM_TEXT) return null;
   if (!isInRange(item.calories, MAX_ITEM_CALORIES)) return null;
   if (
     !isInRange(item.protein_g, MAX_ITEM_MACRO_GRAMS) ||

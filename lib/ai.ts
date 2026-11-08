@@ -1,7 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import { type ImageType, type MealItem, MAX_ITEMS, parseItem, sumItems, type Totals } from "@/lib/meals";
+import { type ImageType, MAX_ITEM_TEXT, MAX_ITEMS, type MealItem, parseItem, sumItems, type Totals } from "@/lib/meals";
+
 
 export const AI_MODEL = process.env.AI_MODEL || "claude-haiku-5-5";
 
@@ -28,6 +29,8 @@ const AnalysisSchema = z.object({
 const SYSTEM_PROMPT = `You estimate the nutrition of meals for a calorie tracking app. You receive a food photo, a written description, or both.
 
 For each distinct food, give its name, an estimated portion in everyday terms with an approximate weight (such as "1 cup, about 150 g"), and the calories, protein, carbohydrates and fat for that whole portion, not per 100 g.
+
+List each food once, and only what the user ate. When the description says they ate part of what is shown, such as half a slice or no fries, give one item for just that part. Never add the uneaten rest, a whole portion for reference, or the same food twice.
 
 Use amounts stated in the description when they are given. Otherwise judge portions from visual cues such as the plate, utensils and packaging. Remember cooking oils, sauces and dressings when they are likely to be present.
 
@@ -146,8 +149,15 @@ export async function analyzeMeal(input: {
     );
   }
 
-  // The model's numbers are still checked, since they end up in the edit form.
-  const items = output.items.slice(0, MAX_ITEMS).map(parseItem);
+  // The model's numbers are still checked, since they end up in the edit form. Its
+  // wording is only shortened: a long portion description shouldn't sink the estimate.
+  const clip = (text: string) => {
+    const trimmed = text.trim();
+    return trimmed.length > MAX_ITEM_TEXT ? `${trimmed.slice(0, MAX_ITEM_TEXT - 1).trimEnd()}…` : trimmed;
+  };
+  const items = output.items
+    .slice(0, MAX_ITEMS)
+    .map((item) => parseItem({ ...item, name: clip(item.name), portion: clip(item.portion) }));
   if (items.some((item) => item === null)) {
     console.error("AI analysis out of range:", { requestId: response.id });
     throw new AnalysisError("The analysis didn't look right. Please try again.", 502);

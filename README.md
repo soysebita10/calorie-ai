@@ -36,6 +36,7 @@ AI-powered calorie tracking SaaS by **Sebastian Nieves**. Class project.
 | `scripts/verify-billing.mjs` | Plan, limit and webhook protection test, for test databases only. Makes no AI or Stripe calls |
 | `scripts/verify-auth.mjs` | End-to-end auth test |
 | `scripts/verify-meals.mjs` | End-to-end meal test. Makes no AI calls unless `MAX_AI_CALLS` is set |
+| `scripts/stress-ai.mjs` | Bulk real-AI test (`npm run stress:ai`), for test databases only. Spends API credit between `MIN_SPEND_USD` and `MAX_SPEND_USD`, using photos in `test-images/food` and `test-images/nonfood` (not committed) |
 
 ## Setup
 
