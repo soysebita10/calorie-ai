@@ -205,14 +205,22 @@ function judge(testCase, result) {
 async function pool(items, worker) {
   const results = new Array(items.length);
   let next = 0;
+  let failure = null;
+  // On an error, every worker stops taking new cases and finishes its current one,
+  // so cleanup runs only after no request can still create an account.
   await Promise.all(
     Array.from({ length: CONCURRENCY }, async () => {
-      while (next < items.length) {
+      while (!failure && next < items.length) {
         const i = next++;
-        results[i] = await worker(items[i]);
+        try {
+          results[i] = await worker(items[i]);
+        } catch (error) {
+          failure ??= error;
+        }
       }
     }),
   );
+  if (failure) throw failure;
   return results;
 }
 
